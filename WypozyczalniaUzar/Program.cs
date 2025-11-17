@@ -23,6 +23,10 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 
+app.MapGet("/healthz", () => Results.Ok("Healthy")).AllowAnonymous();
+
+   
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

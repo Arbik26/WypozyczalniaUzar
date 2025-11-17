@@ -1,0 +1,36 @@
+# Visual Studio
+.vs/
+.vscode/
+*.user
+*.suo
+*.vsidx
+
+# Build
+bin/
+obj/
+out/
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+appsettings.*.local.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+TestResults/
+coverage/
+
+# Node
+node_modules/
+dist/
+
+# Other
+*.bak
+*.tmp

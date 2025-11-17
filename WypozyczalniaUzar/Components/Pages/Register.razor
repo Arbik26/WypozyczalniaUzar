@@ -1,0 +1,72 @@
+@page "/register"
+
+<PageTitle>Rejestracja</PageTitle>
+
+<div style="max-width: 400px; margin: 48px auto; padding: 32px; border-radius: 10px; box-shadow: 0 0 16px #d1d1e8;">
+    <h2 style="text-align:center;">Rejestracja nowego użytkownika</h2>
+
+    <EditForm Model="@registerModel" OnValidSubmit="RegisterUser">
+        <DataAnnotationsValidator />
+
+        <div style="margin-bottom: 16px;">
+            <label for="username">Nazwa użytkownika</label><br />
+            <InputText id="username" class="form-control" @bind-Value="registerModel.Username" />
+            <ValidationMessage For="@(() => registerModel.Username)" />
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label for="email">E-mail</label><br />
+            <InputText id="email" type="email" class="form-control" @bind-Value="registerModel.Email" />
+            <ValidationMessage For="@(() => registerModel.Email)" />
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <label for="password">Hasło</label><br />
+            <InputText id="password" class="form-control" @bind-Value="registerModel.Password" />
+            <ValidationMessage For="@(() => registerModel.Password)" />
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label for="confirmPassword">Potwierdź hasło</label><br />
+            <InputText id="confirmPassword" class="form-control" @bind-Value="registerModel.ConfirmPassword" />
+            <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
+        </div>
+
+        <button type="submit" style="width: 100%;">Zarejestruj się</button>
+    </EditForm>
+
+    @if (registerFailed)
+    {
+        <div style="color: #b00020; text-align: center; margin-top: 15px;">
+            Rejestracja nie powiodła się. Hasła muszą być zgodne.
+        </div>
+    }
+</div>
+
+@code {
+    private RegisterModel registerModel = new();
+    private bool registerFailed = false;
+
+    private void RegisterUser()
+    {
+        if (registerModel.Password == registerModel.ConfirmPassword)
+        {
+            // Tutaj dodaj zapisywanie użytkownika do bazy
+            registerFailed = false;
+            // Możesz dodać przekierowanie np. do logowania
+            // NavigationManager.NavigateTo("/login");
+        }
+        else
+        {
+            registerFailed = true;
+        }
+    }
+
+    public class RegisterModel
+    {
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string ConfirmPassword { get; set; }
+    }
+}

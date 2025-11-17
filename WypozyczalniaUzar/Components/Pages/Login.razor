@@ -1,0 +1,56 @@
+@page "/login"
+
+
+<div style="max-width: 400px; margin: 48px auto; padding: 32px; border-radius: 10px; box-shadow: 0 0 16px #d1d1e8;">
+    <h2 style="text-align:center;">Logowanie do wypożyczalni</h2>
+
+    <EditForm Model="@loginModel" OnValidSubmit="LoginUser">
+        <DataAnnotationsValidator />
+
+        <div style="margin-bottom: 16px;">
+            <label for="username">E-mail lub login</label><br />
+            <InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
+            <ValidationMessage For="@(() => loginModel.Username)" />
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label for="password">Hasło</label><br />
+            <InputText id="password" class="form-control" @bind-Value="loginModel.Password" />
+            <ValidationMessage For="@(() => loginModel.Password)" />
+        </div>
+
+        <button type="submit" style="width: 100%;">Zaloguj się</button>
+    </EditForm>
+
+    @if (loginFailed)
+    {
+        <div style="color: #b00020; text-align: center; margin-top: 15px;">
+            Nieprawidłowy login lub hasło!
+        </div>
+    }
+</div>
+@code {
+    private LoginModel loginModel = new();
+    private bool loginFailed = false;
+
+    private void LoginUser()
+    {
+        // Przykładowe "logowanie", bez bazy czy jwt
+        if (loginModel.Username == "admin" && loginModel.Password == "admin")
+        {
+            // tu: przekierowanie po zalogowaniu lub zapis do lokalnego storage/tokenu
+            loginFailed = false;
+            // NavigationManager.NavigateTo("/");
+        }
+        else
+        {
+            loginFailed = true;
+        }
+    }
+
+    public class LoginModel
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
+}

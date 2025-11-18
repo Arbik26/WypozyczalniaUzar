@@ -1,11 +1,42 @@
-# Please refer https://aka.ms/HTTPSinContainer on how to setup an https developer certificate for your ASP.NET Core service.
+
 
 services:
-  wypozyczalniauzar:
-    image: wypozyczalniauzar
+  app:
     build:
       context: .
       dockerfile: WypozyczalniaUzar/Dockerfile
     ports:
-      - 5000:8080
+      - "5000:8080"
+      - "5001:8443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
+      - MongoDbSettings__DatabaseName=wypozyczalniaDB
+    depends_on:
+      - mongodb
+    networks:
+      - wypozyczalnia-net
+    restart: unless-stopped
 
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb_wypozyczalnia
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: wypozyczalniaDB
+    volumes:
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
+    networks:
+      - wypozyczalnia-net
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  mongo_config:
+
+networks:
+  wypozyczalnia-net:
+    driver: bridge

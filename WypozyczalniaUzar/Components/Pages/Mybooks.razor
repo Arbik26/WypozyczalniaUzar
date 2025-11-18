@@ -1,5 +1,64 @@
 @page "/mybooks"
-
+@using System.ComponentModel.DataAnnotations
 <PageTitle>Filmy</PageTitle>
 
-<h1>Lista moich wypożyczonych filmów.</h1>
+<h1>Lista moich wypożyczonych filmów</h1>
+
+<FluentGrid Spacing="4">
+    <FluentGridItem xs="12">
+       @* <h4>Dostępne filmy w wypożyczalni</h4> *@
+        <FluentDataGrid Items="@films" Style="width: 100%;" AutoFit="true">
+            <PropertyColumn Property="@(f => f.FilmId)" Title="Id" Sortable="true" />
+            <PropertyColumn Property="@(f => f.Title)" Title="Tytuł" Sortable="true" />
+            <PropertyColumn Property="@(f => f.Director)" Title="Reżyser" Sortable="true" />
+            <PropertyColumn Property="@(f => f.Length)" Title="Czas trwania (min)" Sortable="true" />
+            <PropertyColumn Property="@(f => f.Type)" Title="Gatunek" Sortable="true" />
+            <PropertyColumn Property="@(f => f.Actors)" Title="Aktorzy" />
+            <PropertyColumn Property="@(f => f.Bio)" Title="Opis" />
+        </FluentDataGrid>
+    </FluentGridItem>
+</FluentGrid>
+
+@code {
+    public class Film
+    {
+        public Film(int filmId, string title, string type, string director, int length, string actors, string bio)
+        {
+            FilmId = filmId;
+            Title = title;
+            Type = type;
+            Director = director;
+            Length = length;
+            Actors = actors;
+            Bio = bio;
+        }
+
+        [Display(Name = "Id")]
+        public int FilmId { get; set; }
+
+        [Display(Name = "Tytuł")]
+        public string Title { get; set; }
+
+        [Display(Name = "Gatunek")]
+        public string Type { get; set; }
+
+        [Display(Name = "Reżyser")]
+        public string Director { get; set; }
+
+        [Display(Name = "Czas trwania (min)")]
+        public int Length { get; set; }
+
+        [Display(Name = "Aktorzy")]
+        public string Actors { get; set; }
+
+        [Display(Name = "Opis")]
+        public string Bio { get; set; }
+    }
+
+    IQueryable<Film> films = new[]
+{
+    new Film(1, "Matrix", "Science Fiction", "Lana Wachowski, Lilly Wachowski", 136, "Keanu Reeves, Laurence Fishburne", "Kultowy film cyberpunk opisujący walkę ludzi z maszynami."),
+    
+}.AsQueryable();
+
+}

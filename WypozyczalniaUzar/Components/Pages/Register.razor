@@ -1,72 +1,297 @@
+@rendermode InteractiveServer
 @page "/register"
+@using Microsoft.FluentUI.AspNetCore.Components
+@using System.ComponentModel.DataAnnotations
+@inject AuthenticationService AuthService
+@inject NavigationManager Navigation
 
-<PageTitle>Rejestracja</PageTitle>
+<PageTitle>Rejestracja - Wypożyczalnia Filmów</PageTitle>
 
-<div style="max-width: 400px; margin: 48px auto; padding: 32px; border-radius: 10px; box-shadow: 0 0 16px #d1d1e8;">
-    <h2 style="text-align:center;">Rejestracja nowego użytkownika</h2>
+<div class="auth-container">
+    <div class="auth-card">
+        <h1>Zarejestruj się</h1>
+        <p class="subtitle">Utwórz nowe konto w Wypożyczalni Filmów</p>
 
-    <EditForm Model="@registerModel" OnValidSubmit="RegisterUser">
-        <DataAnnotationsValidator />
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="alert alert-@(isSuccess ? "success" : "error")">
+                @message
+            </div>
+        }
 
-        <div style="margin-bottom: 16px;">
-            <label for="username">Nazwa użytkownika</label><br />
-            <InputText id="username" class="form-control" @bind-Value="registerModel.Username" />
-            <ValidationMessage For="@(() => registerModel.Username)" />
-        </div>
+        <EditForm Model="@registerModel" OnValidSubmit="@HandleRegister" FormName="RegisterForm">
+            <DataAnnotationsValidator />
 
-        <div style="margin-bottom: 16px;">
-            <label for="email">E-mail</label><br />
-            <InputText id="email" type="email" class="form-control" @bind-Value="registerModel.Email" />
-            <ValidationMessage For="@(() => registerModel.Email)" />
-        </div>
+            <div class="form-group">
+                <label for="firstName">Imię *</label>
+                <InputText id="firstName" class="form-control" @bind-Value="registerModel.FirstName" placeholder="Wpisz imię" />
+                <ValidationMessage For="@(() => registerModel.FirstName)" />
+            </div>
 
-        <div style="margin-bottom: 16px;">
-            <label for="password">Hasło</label><br />
-            <InputText id="password" class="form-control" @bind-Value="registerModel.Password" />
-            <ValidationMessage For="@(() => registerModel.Password)" />
-        </div>
+            <div class="form-group">
+                <label for="lastName">Nazwisko *</label>
+                <InputText id="lastName" class="form-control" @bind-Value="registerModel.LastName" placeholder="Wpisz nazwisko" />
+                <ValidationMessage For="@(() => registerModel.LastName)" />
+            </div>
 
-        <div style="margin-bottom: 24px;">
-            <label for="confirmPassword">Potwierdź hasło</label><br />
-            <InputText id="confirmPassword" class="form-control" @bind-Value="registerModel.ConfirmPassword" />
-            <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
-        </div>
+            <div class="form-group">
+                <label for="address">Adres *</label>
+                <InputText id="address" class="form-control" @bind-Value="registerModel.Address" placeholder="Wpisz adres" />
+                <ValidationMessage For="@(() => registerModel.Address)" />
+            </div>
 
-        <button type="submit" style="width: 100%;">Zarejestruj się</button>
-    </EditForm>
+            <div class="form-group">
+                <label for="phone">Numer telefonu *</label>
+                <InputText id="phone" class="form-control" @bind-Value="registerModel.Phone" placeholder="Wpisz numer telefonu" />
+                <ValidationMessage For="@(() => registerModel.Phone)" />
+            </div>
 
-    @if (registerFailed)
-    {
-        <div style="color: #b00020; text-align: center; margin-top: 15px;">
-            Rejestracja nie powiodła się. Hasła muszą być zgodne.
-        </div>
-    }
+            <div class="form-group">
+                <label for="login">Login *</label>
+                <InputText id="login" class="form-control" @bind-Value="registerModel.Login" placeholder="Wpisz login" />
+                <ValidationMessage For="@(() => registerModel.Login)" />
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <InputText id="email" class="form-control" type="email" @bind-Value="registerModel.Email" placeholder="Wpisz email" />
+                <ValidationMessage For="@(() => registerModel.Email)" />
+            </div>
+
+            <div class="form-group">
+                <label for="password">Hasło (min. 6 znaków) *</label>
+                <InputText id="password" class="form-control" type="password" @bind-Value="registerModel.Password" placeholder="Wpisz hasło" />
+                <ValidationMessage For="@(() => registerModel.Password)" />
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Potwierdź hasło *</label>
+                <InputText id="confirmPassword" class="form-control" type="password" @bind-Value="registerModel.ConfirmPassword" placeholder="Potwierdź hasło" />
+                <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full-width" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span>Rejestrowanie...</span>
+                }
+                else
+                {
+                    <span>Zarejestruj się</span>
+                }
+            </button>
+        </EditForm>
+
+        <div class="auth-footer">
+    <p>Masz już konto? <a href="/login">Zaloguj się tutaj</a></p>
+    
+    <!-- ✅ Przycisk powrotu na Home -->
+    <div style="margin-top: 20px; border-top: 1px solid #ddd; padding-top: 20px;">
+        <a href="/" class="btn-back">← Powrót na stronę główną</a>
+    </div>
+</div>
+
+    </div>
 </div>
 
 @code {
     private RegisterModel registerModel = new();
-    private bool registerFailed = false;
+    private string message = "";
+    private bool isSuccess = false;
+    private bool isLoading = false;
 
-    private void RegisterUser()
+    private class RegisterModel
     {
-        if (registerModel.Password == registerModel.ConfirmPassword)
-        {
-            // Tutaj dodaj zapisywanie użytkownika do bazy
-            registerFailed = false;
-            // Możesz dodać przekierowanie np. do logowania
-            // NavigationManager.NavigateTo("/login");
-        }
-        else
-        {
-            registerFailed = true;
-        }
+        [Required(ErrorMessage = "Imię jest wymagane")]
+        [StringLength(100, MinimumLength = 2, ErrorMessage = "Imię musi mieć od 2 do 100 znaków")]
+        public string FirstName { get; set; } = "";
+
+        [Required(ErrorMessage = "Nazwisko jest wymagane")]
+        [StringLength(100, MinimumLength = 2, ErrorMessage = "Nazwisko musi mieć od 2 do 100 znaków")]
+        public string LastName { get; set; } = "";
+
+        [Required(ErrorMessage = "Adres jest wymagany")]
+        [StringLength(200, MinimumLength = 5, ErrorMessage = "Adres musi mieć od 5 do 200 znaków")]
+        public string Address { get; set; } = "";
+
+        [Required(ErrorMessage = "Numer telefonu jest wymagany")]
+        [RegularExpression(@"^\d{9,15}$", ErrorMessage = "Numer telefonu musi zawierać od 9 do 15 cyfr")]
+        public string Phone { get; set; } = "";
+
+        [Required(ErrorMessage = "Login jest wymagany")]
+        [StringLength(50, MinimumLength = 3, ErrorMessage = "Login musi mieć od 3 do 50 znaków")]
+        public string Login { get; set; } = "";
+
+        [Required(ErrorMessage = "Email jest wymagany")]
+        [EmailAddress(ErrorMessage = "Wpisz prawidłowy adres email")]
+        public string Email { get; set; } = "";
+
+        [Required(ErrorMessage = "Hasło jest wymagane")]
+        [StringLength(100, MinimumLength = 6, ErrorMessage = "Hasło musi mieć minimum 6 znaków")]
+        public string Password { get; set; } = "";
+
+        [Required(ErrorMessage = "Potwierdzenie hasła jest wymagane")]
+        [Compare("Password", ErrorMessage = "Hasła się nie zgadzają")]
+        public string ConfirmPassword { get; set; } = "";
     }
 
-    public class RegisterModel
+    private async Task HandleRegister()
     {
-        public string Username { get; set; }
-        public string Email { get; set; }
-        public string Password { get; set; }
-        public string ConfirmPassword { get; set; }
+        isLoading = true;
+        try
+        {
+            var (success, msg) = await AuthService.RegisterAsync(
+                registerModel.FirstName,
+                registerModel.LastName,
+                registerModel.Address,
+                registerModel.Phone,
+                registerModel.Login,
+                registerModel.Password,
+                registerModel.Email
+            );
+
+            message = msg;
+            isSuccess = success;
+
+            if (success)
+            {
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/login");
+            }
+        }
+        catch (Exception ex)
+        {
+            message = $"Błąd: {ex.Message}";
+            isSuccess = false;
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 }
+
+<style>
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .auth-card {
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 500px;
+    }
+
+    .auth-card h1 {
+        margin-bottom: 10px;
+        color: #333;
+    }
+
+    .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+    }
+
+    .alert {
+        padding: 12px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        font-weight: 500;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .alert-error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-group .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .form-group .form-control:focus {
+        border-color: #667eea;
+        outline: none;
+        box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+    }
+
+    .btn {
+        padding: 12px;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .btn-full-width {
+        width: 100%;
+    }
+
+    .auth-footer {
+        text-align: center;
+        margin-top: 20px;
+        color: #666;
+    }
+
+    .auth-footer a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+
+    :global(.validation-message) {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 5px;
+        display: block;
+    }
+</style>

@@ -1,54 +1,188 @@
+@rendermode InteractiveServer
 @page "/Films"
-@using System.ComponentModel.DataAnnotations
 @inject MongoDbService MongoService
 
+<link rel="stylesheet" href="css/Films.css" />
 
-<PageTitle>Filmy</PageTitle>
+<PageTitle>Filmy - Wypożyczalnia Filmów</PageTitle>
 
+<div class="films-container">
+    <!-- Nagłówek -->
+    <div class="films-header">
+        <h1>📽️ Kolekcja Filmów</h1>
+        <p>Odkryj i wypożycz najlepsze filmy</p>
+    </div>
 
-<h1 style="text-align:center;">Lista dostępnych filmów</h1>
+    <!-- Sekcja wyszukiwania i filtrowania -->
+    <div class="filters-wrapper">
+        <div class="search-box">
+            <input type="text" 
+                   class="search-input" 
+                   placeholder="🔍 Szukaj po tytule..." 
+                   @oninput="@((ChangeEventArgs e) => OnSearchChange(e.Value?.ToString()))" />
+        </div>
 
+        <div class="filters-group">
+            <select class="filter-select" @onchange="@OnGenreChange">
+                <option value="">🎬 Wszystkie gatunki</option>
+                <option value="Science Fiction">Science Fiction</option>
+                <option value="Drama">Drama</option>
+                <option value="Thriller">Thriller</option>
+                <option value="Komedia">Komedia</option>
+                <option value="Horror">Horror</option>
+                <option value="Akcja">Akcja</option>
+            </select>
 
-@if (isLoading)
+            <select class="filter-select" @onchange="@OnSortChange">
+                <option value="title">Sortuj po tytule ↑</option>
+                <option value="rating">Sortuj po ocenie ⭐</option>
+                <option value="length">Sortuj po długości ⏱️</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Zawartość -->
+    @if (isLoading)
+    {
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Ładowanie filmów...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-error">
+            <span>❌</span> @errorMessage
+        </div>
+    }
+    else if (filteredMovies != null && filteredMovies.Count > 0)
+    {
+        <div class="results-info">
+            Znalezione <strong>@filteredMovies.Count</strong> filmów
+        </div>
+
+        <div class="movies-grid">
+            @foreach (var movie in filteredMovies)
+            {
+                <div class="movie-card">
+                    <div class="movie-card-top">
+                        <div class="rating-badge">⭐ @movie.Rating.ToString("F1")</div>
+                        <span class="status-badge @(movie.Available ? "available" : "unavailable")">
+                            @(movie.Available ? "✓" : "✗")
+                        </span>
+                    </div>
+
+                    <h3 class="movie-title">@movie.Title</h3>
+                    
+                    <div class="movie-meta">
+                        <div class="meta-item">
+                            <span class="label">Reżyser</span>
+                            <span class="value">@movie.Director</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="label">Gatunek</span>
+                            <span class="value">@movie.Genre</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="label">Czas</span>
+                            <span class="value">@movie.Length min</span>
+                        </div>
+                    </div>
+
+                    <button class="btn-details" @onclick="@(() => OpenDetails(movie))">
+                        Szczegóły
+                    </button>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="no-movies">
+            <span class="no-movies-icon">🎬</span>
+            <p>Brak filmów spełniających kryteria</p>
+        </div>
+    }
+</div>
+
+<!-- Modal szczegółów -->
+@if (selectedMovie != null && showModal)
 {
-    <p>⏳ Ładowanie filmów...</p>
-}
-else if (!string.IsNullOrEmpty(errorMessage))
-{
-    <p style="color: red;">❌ Błąd: @errorMessage</p>
-}
-else if (movies != null && movies.Count > 0)
-{
-    <FluentGrid Spacing="4">
-        <FluentGridItem xs="12">
-            <FluentDataGrid Items="@movies.AsQueryable()" Style="width: 100%;" AutoFit="true">
-                <PropertyColumn Property="@(f => f.Title)" Title="Tytuł" Sortable="true" />
-                <PropertyColumn Property="@(f => f.Director)" Title="Reżyser" Sortable="true" />
-                <PropertyColumn Property="@(f => f.Genre)" Title="Gatunek" Sortable="true" />
-                <PropertyColumn Property="@(f => f.Length)" Title="Czas (min)" Sortable="true" />
-                <PropertyColumn Property="@(f => f.Rating)" Title="Ocena" Sortable="true" />
-            </FluentDataGrid>
-        </FluentGridItem>
-    </FluentGrid>
-}
-else
-{
-    <p>Brak dostępnych filmów</p>
-}
+    <div class="modal-overlay" @onclick="@CloseDetails">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <button class="modal-close" @onclick="@CloseDetails">✕</button>
+            
+            <div class="modal-header">
+                <h2>@selectedMovie.Title</h2>
+                <div class="modal-rating">⭐ @selectedMovie.Rating.ToString("F1")/10</div>
+            </div>
 
+            <div class="modal-body">
+                <div class="detail-section">
+                    <div class="detail-item">
+                        <span class="detail-label">Reżyser</span>
+                        <span class="detail-value">@selectedMovie.Director</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Gatunek</span>
+                        <span class="detail-value">@selectedMovie.Genre</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Czas trwania</span>
+                        <span class="detail-value">@selectedMovie.Length minut</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value @(selectedMovie.Available ? "text-available" : "text-unavailable")">
+                            @(selectedMovie.Available ? "✓ Dostępny" : "✗ Niedostępny")
+                        </span>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(selectedMovie.Description))
+                {
+                    <div class="description-box">
+                        <h3>Opis</h3>
+                        <p>@selectedMovie.Description</p>
+                    </div>
+                }
+
+                @if (selectedMovie.Actors != null && selectedMovie.Actors.Count > 0)
+                {
+                    <div class="actors-box">
+                        <h3>Obsada</h3>
+                        <div class="actors-list">
+                            @foreach (var actor in selectedMovie.Actors)
+                            {
+                                <span class="actor-tag">@actor</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <button class="btn-close-modal" @onclick="@CloseDetails">Zamknij</button>
+        </div>
+    </div>
+}
 
 @code {
     private List<Movie> movies = new();
+    private List<Movie> filteredMovies = new();
     private bool isLoading = true;
     private string errorMessage = "";
-
+    private string searchTerm = "";
+    private string selectedGenre = "";
+    private string sortBy = "title";
+    private Movie selectedMovie = null;
+    private bool showModal = false;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)); // 10 sekund timeout
             movies = await MongoService.GetAvailableMoviesAsync();
+            ApplyFiltersAndSort();
             isLoading = false;
         }
         catch (Exception ex)
@@ -57,5 +191,61 @@ else
             isLoading = false;
             Console.WriteLine($"Błąd Films.razor: {ex}");
         }
+    }
+
+    private void OnSearchChange(string value)
+    {
+        searchTerm = value ?? "";
+        ApplyFiltersAndSort();
+    }
+
+    private void OnGenreChange(ChangeEventArgs e)
+    {
+        selectedGenre = e.Value?.ToString() ?? "";
+        ApplyFiltersAndSort();
+    }
+
+    private void OnSortChange(ChangeEventArgs e)
+    {
+        sortBy = e.Value?.ToString() ?? "title";
+        ApplyFiltersAndSort();
+    }
+
+    private void ApplyFiltersAndSort()
+    {
+        filteredMovies = movies.Where(m => m.Available).ToList();
+
+        if (!string.IsNullOrEmpty(searchTerm))
+        {
+            filteredMovies = filteredMovies
+                .Where(m => m.Title.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        if (!string.IsNullOrEmpty(selectedGenre))
+        {
+            filteredMovies = filteredMovies
+                .Where(m => m.Genre.Contains(selectedGenre, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        filteredMovies = sortBy switch
+        {
+            "rating" => filteredMovies.OrderByDescending(m => m.Rating).ToList(),
+            "length" => filteredMovies.OrderBy(m => m.Length).ToList(),
+            _ => filteredMovies.OrderBy(m => m.Title).ToList()
+        };
+    }
+
+    private void OpenDetails(Movie movie)
+    {
+        selectedMovie = movie;
+        showModal = true;
+    }
+
+    private void CloseDetails()
+    {
+        showModal = false;
+        selectedMovie = null;
     }
 }

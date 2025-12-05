@@ -1,0 +1,134 @@
+@rendermode InteractiveServer
+@page "/dashboard"
+@inject AuthenticationService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Dashboard - Wypożyczalnia</PageTitle>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>✅ Zalogowałeś się pomyślnie!</h1>
+        <p class="subtitle">Witaj w Wypożyczalni Filmów</p>
+        
+        <button @onclick="Logout" class="btn btn-danger">
+            🚪 Wyloguj się
+        </button>
+    </div>
+
+    <div class="dashboard-content">
+        <div class="dashboard-card">
+            <h2>🎬 Dostępne Filmy</h2>
+            <p>Przejdź do sekcji filmów aby zobaczyć pełny katalog.</p>
+            <a href="/Films" class="btn btn-primary">Przejdź do Filmów</a>
+        </div>
+
+        <div class="dashboard-card">
+            <h2>📦 Moje Wypożyczenia</h2>
+            <p>Sprawdź wszystkie aktywne wypożyczenia.</p>
+            <a href="/rentals" class="btn btn-primary">Moje Wypożyczenia</a>
+        </div>
+
+        <div class="dashboard-card">
+            <h2>⚙️ Moje Konto</h2>
+            <p>Zarządzaj swoimi danymi profilu.</p>
+            <a href="/profile" class="btn btn-primary">Moje Konto</a>
+        </div>
+    </div>
+</div>
+
+@code {
+    private async Task Logout()
+    {
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+}
+
+<style>
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+
+    .dashboard-header {
+        text-align: center;
+        color: white;
+        margin-bottom: 50px;
+    }
+
+    .dashboard-header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+    }
+
+    .dashboard-header .subtitle {
+        font-size: 1.1em;
+        margin-bottom: 30px;
+        opacity: 0.9;
+    }
+
+    .dashboard-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-top: 40px;
+    }
+
+    .dashboard-card {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .dashboard-card h2 {
+        color: #333;
+        margin-bottom: 15px;
+        font-size: 1.5em;
+    }
+
+    .dashboard-card p {
+        color: #666;
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+
+    .btn {
+        display: inline-block;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-danger {
+        background: #ff6b6b;
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #ff5252;
+        transform: translateY(-2px);
+    }
+</style>

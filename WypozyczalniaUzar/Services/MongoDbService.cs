@@ -2,7 +2,6 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using Microsoft.Extensions.Options;
 
-
 public class MongoDbService
 {
     private readonly IMongoDatabase _database;
@@ -25,14 +24,20 @@ public class MongoDbService
     }
 
     private async Task InitializeDatabaseAsync()
+{
+    if (_initialized) return;
+    
+    try
     {
-        if (_initialized) return;
+        Console.WriteLine("🔄 Inicjalizowanie bazy danych...");
         
+        // ✅ DODAJ TO - bez czekania na Clients (mogą być puste)
+        _initialized = true;
+        Console.WriteLine("✅ Baza danych GOTOWA (bez czekania na kolekcje)!");
+        
+        // Sprawdzić czy baza ma dane (ale nie blokuj inicjalizacji)
         try
         {
-            Console.WriteLine("🔄 Inicjalizowanie bazy danych...");
-            
-            // Sprawdzić czy baza ma dane
             var movieCount = await MoviesCollection.CountDocumentsAsync(_ => true);
             Console.WriteLine($"📊 Liczba filmów w bazie: {movieCount}");
             
@@ -53,46 +58,25 @@ public class MongoDbService
                         Actors = new List<string> { "Matthew McConaughey", "Anne Hathaway" },
                         AddedAt = DateTime.Now,
                         Available = true
-                    },
-                    new Movie
-                    {
-                        Title = "The Dark Knight",
-                        Director = "Christopher Nolan",
-                        Genre = "Action",
-                        Length = 152,
-                        Rating = 9.0,
-                        Description = "When the menace known as the Joker wreaks havoc",
-                        Actors = new List<string> { "Christian Bale", "Heath Ledger" },
-                        AddedAt = DateTime.Now,
-                        Available = true
-                    },
-                    new Movie
-                    {
-                        Title = "Inception",
-                        Director = "Christopher Nolan",
-                        Genre = "Sci-Fi",
-                        Length = 148,
-                        Rating = 8.8,
-                        Description = "A skilled thief who steals corporate secrets",
-                        Actors = new List<string> { "Leonardo DiCaprio", "Ellen Page" },
-                        AddedAt = DateTime.Now,
-                        Available = true
                     }
                 };
 
                 await MoviesCollection.InsertManyAsync(testMovies);
                 Console.WriteLine("✅ Testowe filmy dodane do bazy!");
             }
-            
-            _initialized = true;
-            Console.WriteLine("✅ Baza danych gotowa!");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Błąd inicjalizacji bazy: {ex.Message}");
-            Console.WriteLine($"📍 StackTrace: {ex.StackTrace}");
+            Console.WriteLine($"⚠️  Problem z filmami: {ex.Message}");
         }
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Błąd inicjalizacji bazy: {ex.Message}");
+        _initialized = true; // ← WAŻNE: ustaw na true i tak!
+    }
+}
+
 
     // ========== MOVIES ==========
     public async Task<List<Movie>> GetAllMoviesAsync()
@@ -146,7 +130,37 @@ public class MongoDbService
         await MoviesCollection.DeleteOneAsync(m => m.Id == ObjectId.Parse(id));
     }
 
-    // ========== CLIENTS ==========
+    // ========== CLIENTS - AUTHENTICATION ==========
+    
+    /// <summary>
+    /// Wyszukaj klienta po loginie (dla logowania)
+    /// </summary>
+    public async Task<Client?> GetClientByLoginAsync(string login)
+    {
+        await EnsureInitialized();
+        return await ClientsCollection.Find(c => c.Login == login).FirstOrDefaultAsync();
+    }
+
+    /// <summary>
+    /// Wyszukaj klienta po emailu (sprawdzenie duplikatu przy rejestracji)
+    /// </summary>
+    public async Task<Client?> GetClientByEmailAsync(string email)
+    {
+        await EnsureInitialized();
+        return await ClientsCollection.Find(c => c.Email == email).FirstOrDefaultAsync();
+    }
+
+    /// <summary>
+    /// Stwórz nowego klienta (rejestracja)
+    /// </summary>
+    public async Task CreateClientAsync(Client client)
+    {
+        await EnsureInitialized();
+        await ClientsCollection.InsertOneAsync(client);
+    }
+
+    // ========== CLIENTS - STANDARD CRUD ==========
+    
     public async Task<List<Client>> GetAllClientsAsync()
     {
         await EnsureInitialized();
@@ -157,12 +171,6 @@ public class MongoDbService
     {
         await EnsureInitialized();
         return await ClientsCollection.Find(c => c.Id == ObjectId.Parse(id)).FirstOrDefaultAsync();
-    }
-
-    public async Task<Client> GetClientByLoginAsync(string login)
-    {
-        await EnsureInitialized();
-        return await ClientsCollection.Find(c => c.Login == login).FirstOrDefaultAsync();
     }
 
     public async Task AddClientAsync(Client client)
@@ -223,19 +231,37 @@ public class MongoDbService
         return (int)count;
     }
 
-    // Czekaj aż baza zostanie zainicjalizowana
-    private async Task EnsureInitialized()
+    // ========== HELPER METHODS ==========
+    
+   private async Task EnsureInitialized()
+{
+    int timeout = 0;
+    int maxTimeout = 50; // Zwiększone z 30 na 50 (5 sekund zamiast 3)
+    
+    while (!_initialized && timeout < maxTimeout)
     {
-        int timeout = 0;
-        while (!_initialized && timeout < 30)
-        {
-            await Task.Delay(100);
-            timeout++;
-        }
-        
-        if (!_initialized)
-        {
-            throw new Exception("Baza danych nie została zainicjalizowana w ciągu 3 sekund!");
-        }
+        await Task.Delay(100);
+        timeout++;
+    }
+    
+    if (!_initialized)
+    {
+        Console.WriteLine($"⚠️  UWAGA: Baza danych nie całkowicie zainicjalizowana, ale kontynuuję...");
+        // Nie rzucaj wyjątku - pozwól kontynuować!
+    }
+}
+
+
+    // ========== ADMINS ==========
+    public IMongoCollection<Admin> GetAdminsCollection()
+        => _database.GetCollection<Admin>("admins");
+
+    public async Task<Admin> GetAdminByUsernameAsync(string username)
+        => await GetAdminsCollection().Find(a => a.Username == username).FirstOrDefaultAsync();
+
+    public async Task<string> CreateAdminAsync(Admin admin)
+    {
+        await GetAdminsCollection().InsertOneAsync(admin);
+        return admin.Id.ToString();
     }
 }

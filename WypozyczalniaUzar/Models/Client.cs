@@ -7,26 +7,29 @@ public class Client
     public ObjectId Id { get; set; }
 
     [BsonElement("firstName")]
-    public string FirstName { get; set; }
+    public string FirstName { get; set; } = string.Empty;
 
     [BsonElement("lastName")]
-    public string LastName { get; set; }
+    public string LastName { get; set; } = string.Empty;
 
     [BsonElement("address")]
-    public string Address { get; set; }
+    public string Address { get; set; } = string.Empty;
 
     [BsonElement("phone")]
-    public string Phone { get; set; }
-
-    [BsonElement("registeredAt")]
-    public DateTime RegisteredAt { get; set; }
+    public string Phone { get; set; } = string.Empty;
 
     [BsonElement("login")]
-    public string Login { get; set; }
+    public string Login { get; set; } = string.Empty;
 
     [BsonElement("passwordHash")]
-    public string PasswordHash { get; set; }
+    public string PasswordHash { get; set; } = string.Empty;
 
-    [BsonElement("isAdmin")]
-    public bool IsAdmin { get; set; } = false;
+    [BsonElement("email")]
+    public string Email { get; set; } = string.Empty;
+
+    [BsonElement("createdAt")]
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+
+    [BsonElement("updatedAt")]
+    public DateTime UpdatedAt { get; set; } = DateTime.Now;
 }

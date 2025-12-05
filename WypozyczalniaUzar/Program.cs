@@ -1,4 +1,5 @@
 using Microsoft.FluentUI.AspNetCore.Components;
+using System.Text;
 using WypozyczalniaUzar.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,9 +11,14 @@ builder.Services.AddFluentUIComponents();
 
 // ==================== MongoDB Configuration ====================
 builder.Services.Configure<MongoDbSettings>(
-    builder.Configuration.GetSection("MongoDbSettings"));
+    builder.Configuration.GetSection("MongoDb"));
 
 builder.Services.AddScoped<MongoDbService>();
+// ================================================================
+
+// ==================== Authentication Services (Simplified) ====================
+builder.Services.AddScoped<AuthenticationService>();
+builder.Services.AddCascadingAuthenticationState();
 // ================================================================
 
 var app = builder.Build();
@@ -21,12 +27,10 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 app.UseAntiforgery();
 

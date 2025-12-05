@@ -1,15 +1,199 @@
-﻿@page "/"
-@using Microsoft.FluentUI.AspNetCore.Components
+﻿@rendermode InteractiveServer
+@page "/"
 
 <PageTitle>Wypożyczalnia Filmów</PageTitle>
 
-<h1 style="text-align:center;">Witamy w Wypożyczalni Filmów Uzar!</h1>
+<div class="home-container">
+    <!-- Główny nagłówek -->
+    <div class="hero-section">
+        <h1 class="hero-title">🎬 Witamy w Wypożyczalni Filmów Uzar!</h1>
+        <p class="hero-subtitle">
+            Najlepsze filmy w twojej okolicy. Zaloguj się lub załóż konto, aby rozpocząć przygodę!
+        </p>
+    </div>
 
-<div style="text-align:center; margin-top:32px;">
-    <a href="/login" style="margin-right: 20px;"><button>Zaloguj się</button></a>
-    <a href="/register"><button>Zarejestruj się</button></a>
+    <!-- Przyciski główne -->
+    <div class="buttons-container">
+        <a href="/login" class="btn btn-primary">
+            <span class="btn-icon">✓</span>
+            <span class="btn-text">Zaloguj się</span>
+        </a>
+        <a href="/register" class="btn btn-secondary">
+            <span class="btn-icon">+</span>
+            <span class="btn-text">Zarejestruj się</span>
+        </a>
+    </div>
 
-
-
+    <!-- Sekcja informacyjna z przyciskiem do filmów -->
+    <div class="info-section">
+        <div class="info-card">
+            <h2>📽️ Przeglądaj Filmy</h2>
+            <p>Sprawdź naszą bogatą kolekcję filmów bez logowania. Odkryj nowości i klasyki!</p>
+            <a href="/films" class="btn btn-info">
+                🔍 Dostępne Filmy
+            </a>
+        </div>
+    </div>
 </div>
 
+<style>
+    .home-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 60px 20px 40px;
+    }
+
+    /* Sekcja główna */
+    .hero-section {
+        text-align: center;
+        color: white;
+        margin-bottom: 50px;
+        animation: slideDown 0.8s ease-out;
+    }
+
+    .hero-title {
+        font-size: clamp(28px, 8vw, 56px);
+        margin: 0 0 20px 0;
+        font-weight: 700;
+        text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);
+        letter-spacing: -0.5px;
+    }
+
+    .hero-subtitle {
+        font-size: clamp(16px, 4vw, 22px);
+        margin: 0 0 40px 0;
+        color: rgba(255, 255, 255, 0.95);
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.6;
+    }
+
+    /* Kontenery przycisków */
+    .buttons-container {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 60px;
+    }
+
+    /* Style przycisków */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 32px;
+        font-size: 16px;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+
+    .btn:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-icon {
+        font-size: 20px;
+        display: inline-block;
+    }
+
+    .btn-text {
+        position: relative;
+        z-index: 1;
+    }
+
+    .btn-primary {
+        background: white;
+        color: #667eea;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        color: white;
+        border: 2px solid white;
+    }
+
+    .btn-secondary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        background: white;
+        color: #764ba2;
+    }
+
+    .btn-info {
+        background: #32b8c6;
+        color: white;
+        margin-top: 15px;
+    }
+
+    .btn-info:hover {
+        background: #2a9aa5;
+        transform: translateY(-2px);
+    }
+
+    /* Sekcja informacyjna */
+    .info-section {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 25px;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .info-card {
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease;
+        animation: slideUp 0.8s ease-out both;
+    }
+
+    .info-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.25);
+    }
+
+    .info-card h2 {
+        font-size: 24px;
+        color: #333;
+        margin: 0 0 15px 0;
+        font-weight: 700;
+    }
+
+    .info-card p {
+        font-size: 15px;
+        color: #666;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    
+</style>
